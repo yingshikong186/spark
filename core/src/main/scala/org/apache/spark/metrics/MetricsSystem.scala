@@ -116,7 +116,7 @@ private[spark] class MetricsSystem private (
 
   /**
    * Build a name that uniquely identifies each metric source.
-   * The name is structured as follows: <app ID>.<executor ID (or "driver")>.<source name>.
+   * The default name is structured as follows: <app ID>.<executor ID (or "driver")>.<source name>.
    * If either ID is not available, this defaults to just using <source name>.
    *
    * @param source Metric source to be named by this method.
@@ -130,7 +130,12 @@ private[spark] class MetricsSystem private (
 
     if (instance == "driver" || instance == "executor") {
       if (appId.isDefined && executorId.isDefined) {
-        MetricRegistry.name(appId.get, executorId.get, source.sourceName)
+        if (conf.getBoolean("spark.metrics.name.useAppName", false)) {
+          val appName = conf.getOption("spark.app.name")
+          MetricRegistry.name(appName.get, executorId.get, source.sourceName)
+        } else {
+          MetricRegistry.name(appId.get, executorId.get, source.sourceName)
+        }
       } else {
         // Only Driver and Executor set spark.app.id and spark.executor.id.
         // Other instance types, e.g. Master and Worker, are not related to a specific application.
