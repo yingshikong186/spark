@@ -22,7 +22,9 @@ import java.util.{List => JList, Map => JMap, Set => JSet}
 
 import scala.collection.JavaConversions._
 import scala.reflect.ClassTag
+import java.util.{List => JList}
 
+import org.apache.spark.streaming.kafka.KafkaCluster.LeaderOffset
 import kafka.common.TopicAndPartition
 import kafka.message.MessageAndMetadata
 import kafka.serializer.{Decoder, DefaultDecoder, StringDecoder}
@@ -404,18 +406,30 @@ object KafkaUtils {
     val messageHandler = (mmd: MessageAndMetadata[K, V]) => (mmd.key, mmd.message)
     val kc = new KafkaCluster(kafkaParams)
     val reset = kafkaParams.get("auto.offset.reset").map(_.toLowerCase)
-
+    val backSize = kafkaParams.getOrElse("kafka.backSize", "1000").toInt
     val result = for {
       topicPartitions <- kc.getPartitions(topics).right
       leaderOffsets <- (if (reset == Some("smallest")) {
         kc.getEarliestLeaderOffsets(topicPartitions)
-      } else {
+      } else if (reset == Some("largest")){
         kc.getLatestLeaderOffsets(topicPartitions)
+      } else {
+        val groupId = kafkaParams.get("group.id") match {
+          case Some(g) => g
+          case _ => throw new SparkException("need group.id in kafkaParams")
+        }
+        val offsets =
+          kc.getConsumerOffsets(groupId, topicPartitions.seq)
+        if(offsets.isLeft) kc.getLatestLeaderOffsets(topicPartitions)
+        else offsets
       }).right
     } yield {
-      val fromOffsets = leaderOffsets.map { case (tp, lo) =>
-          (tp, lo.offset)
+      val fromOffsets = leaderOffsets.map {
+        case (tp, LeaderOffset(_, _, lo)) => (tp, if (lo - backSize < 0) 0 else lo - backSize)
+        case (tp, lo: Long) => (tp, if (lo - backSize < 0) 0 else lo - backSize)
+        case _ => throw new SparkException ("get error leader offsets ")
       }
+
       new DirectKafkaInputDStream[K, V, KD, VD, (K, V)](
         ssc, kafkaParams, fromOffsets, messageHandler)
     }

@@ -237,11 +237,12 @@ class JobGenerator(jobScheduler: JobScheduler) extends Logging {
   }
 
   /** Generate jobs and perform checkpoint for the given `time`.  */
-  private def generateJobs(time: Time) {
+  private def generateJobs(time1: Time) {
     // Set the SparkEnv in this thread, so that job generation code can access the environment
     // Example: BlockRDDs are created in this thread, and it needs to access BlockManager
     // Update: This is probably redundant after threadlocal stuff in SparkEnv has been removed.
     SparkEnv.set(ssc.env)
+    val time = new Time(System.currentTimeMillis())
     Try {
       jobScheduler.receiverTracker.allocateBlocksToBatch(time) // allocate received blocks to batch
       graph.generateJobs(time) // generate jobs using allocated block
