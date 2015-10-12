@@ -123,7 +123,25 @@ class JobScheduler(val ssc: StreamingContext) extends Logging {
     } else {
       listenerBus.post(StreamingListenerBatchSubmitted(jobSet.toBatchInfo))
       jobSets.put(jobSet.time, jobSet)
-      jobSet.jobs.foreach(job => jobExecutor.execute(new JobHandler(job)))
+      jobSet.jobs.foreach { job =>
+        ssc.sc.setLocalProperty(
+          JobScheduler.BATCH_TIME_PROPERTY_KEY, job.time.milliseconds.toString)
+        ssc.sc.setLocalProperty(JobScheduler.OUTPUT_OP_ID_PROPERTY_KEY, job.outputOpId.toString)
+        try {
+          eventLoop.post(JobStarted(job))
+          // Disable checks for existing output directories in jobs launched by the streaming
+          // scheduler, since we may need to write output to an existing directory during checkpoint
+          // recovery; see SPARK-4835 for more details.
+          PairRDDFunctions.disableOutputSpecValidation.withValue(true) {
+            job.run()
+          }
+          eventLoop.post(JobCompleted(job))
+        } finally {
+          ssc.sc.setLocalProperty(JobScheduler.BATCH_TIME_PROPERTY_KEY, null)
+          ssc.sc.setLocalProperty(JobScheduler.OUTPUT_OP_ID_PROPERTY_KEY, null)
+        }
+      }
+//      jobSet.jobs.foreach(job => jobExecutor.execute(new JobHandler(job)))
       logInfo("Added jobs for time " + jobSet.time)
     }
   }
