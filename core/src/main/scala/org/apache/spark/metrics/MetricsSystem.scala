@@ -130,7 +130,12 @@ private[spark] class MetricsSystem private (
 
     if (instance == "driver" || instance == "executor") {
       if (appId.isDefined && executorId.isDefined) {
-        MetricRegistry.name(appId.get, executorId.get, source.sourceName)
+        if (conf.getBoolean("spark.metrics.name.useAppName", false)) {
+          val appName = conf.getOption("spark.app.name")
+          MetricRegistry.name(appName.get, executorId.get, source.sourceName)
+        } else {
+          MetricRegistry.name(appId.get, executorId.get, source.sourceName)
+        }
       } else {
         // Only Driver and Executor set spark.app.id and spark.executor.id.
         // Other instance types, e.g. Master and Worker, are not related to a specific application.
