@@ -406,7 +406,7 @@ object KafkaUtils {
     val messageHandler = (mmd: MessageAndMetadata[K, V]) => (mmd.key, mmd.message)
     val kc = new KafkaCluster(kafkaParams)
     val reset = kafkaParams.get("auto.offset.reset").map(_.toLowerCase)
-    val backSize = kafkaParams.getOrElse("kafka.backSize", "1000").toInt
+    val backSize = kafkaParams.getOrElse("kafka.backSize", "0").toInt
     val result = for {
       topicPartitions <- kc.getPartitions(topics).right
       leaderOffsets <- (if (reset == Some("smallest")) {
@@ -425,7 +425,7 @@ object KafkaUtils {
       }).right
     } yield {
       val fromOffsets = leaderOffsets.map {
-        case (tp, LeaderOffset(_, _, lo)) => (tp, if (lo - backSize < 0) 0 else lo - backSize)
+        case (tp, LeaderOffset(_, _, lo)) => (tp, lo)
         case (tp, lo: Long) => (tp, if (lo - backSize < 0) 0 else lo - backSize)
         case _ => throw new SparkException ("get error leader offsets ")
       }
