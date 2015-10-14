@@ -105,7 +105,7 @@
     <dependency>
       <groupId>org.eclipse.jetty.orbit</groupId>
       <artifactId>javax.servlet.jsp.jstl</artifactId>
-      <version>1.2.0.v201GIO-1.5.11821</version>
+      <version>1.2.0.v201105211821</version>
       <scope>test</scope>
     </dependency>
 
