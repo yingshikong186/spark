@@ -215,6 +215,9 @@ class KafkaRDD[
       if (!iter.hasNext) {
         assert(requestOffset == part.untilOffset, errRanOutBeforeEnd(part))
         finished = true
+        kc.setConsumerOffsets(kc.config.props.getString("group.id"),
+          Map(TopicAndPartition(part.topic, part.partition) -> requestOffset))
+
         null.asInstanceOf[R]
       } else {
         val item = iter.next()

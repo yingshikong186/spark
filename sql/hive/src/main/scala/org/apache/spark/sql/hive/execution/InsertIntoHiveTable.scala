@@ -21,7 +21,6 @@ import java.util
 
 import org.apache.hadoop.hive.conf.HiveConf
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars
-import org.apache.hadoop.hive.metastore.MetaStoreUtils
 import org.apache.hadoop.hive.ql.plan.TableDesc
 import org.apache.hadoop.hive.ql.{Context, ErrorMsg}
 import org.apache.hadoop.hive.serde2.Serializer
@@ -246,6 +245,10 @@ case class InsertIntoHiveTable(
         overwrite,
         holdDDLTime)
     }
+
+    // Clean hive temporary folder on HDFS
+    val fs = outputPath.getFileSystem(jobConf)
+    fs.delete(outputPath.getParent, true)
 
     // Invalidate the cache.
     sqlContext.cacheManager.invalidateCache(table)

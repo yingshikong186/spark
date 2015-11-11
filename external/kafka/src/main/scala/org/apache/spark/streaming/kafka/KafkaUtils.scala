@@ -20,15 +20,9 @@ package org.apache.spark.streaming.kafka
 import java.lang.{Integer => JInt, Long => JLong}
 import java.util.{List => JList, Map => JMap, Set => JSet}
 
-import scala.collection.JavaConversions._
-import scala.reflect.ClassTag
-import java.util.{List => JList}
-
-import org.apache.spark.streaming.kafka.KafkaCluster.LeaderOffset
 import kafka.common.TopicAndPartition
 import kafka.message.MessageAndMetadata
 import kafka.serializer.{Decoder, DefaultDecoder, StringDecoder}
-
 import org.apache.spark.api.java.function.{Function => JFunction}
 import org.apache.spark.api.java.{JavaPairRDD, JavaRDD, JavaSparkContext}
 import org.apache.spark.rdd.RDD
@@ -36,8 +30,12 @@ import org.apache.spark.storage.StorageLevel
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.api.java.{JavaInputDStream, JavaPairInputDStream, JavaPairReceiverInputDStream, JavaStreamingContext}
 import org.apache.spark.streaming.dstream.{InputDStream, ReceiverInputDStream}
+import org.apache.spark.streaming.kafka.KafkaCluster.LeaderOffset
 import org.apache.spark.streaming.util.WriteAheadLogUtils
 import org.apache.spark.{SparkContext, SparkException}
+
+import scala.collection.JavaConversions._
+import scala.reflect.ClassTag
 
 object KafkaUtils {
   /**
@@ -403,7 +401,8 @@ object KafkaUtils {
       kafkaParams: Map[String, String],
       topics: Set[String]
   ): InputDStream[(K, V)] = {
-    val messageHandler = (mmd: MessageAndMetadata[K, V]) => (mmd.key, mmd.message)
+    val messageHandler = (mmd: MessageAndMetadata[K, V]) =>
+      ((mmd.partition + ":" + mmd.offset).asInstanceOf[K], mmd.message)
     val kc = new KafkaCluster(kafkaParams)
     val reset = kafkaParams.get("auto.offset.reset").map(_.toLowerCase)
     val backSize = kafkaParams.getOrElse("kafka.backSize", "0").toInt
