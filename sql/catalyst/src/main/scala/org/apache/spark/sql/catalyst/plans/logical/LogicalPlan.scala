@@ -24,6 +24,8 @@ import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.catalyst.plans.QueryPlan
 import org.apache.spark.sql.catalyst.trees.{CurrentOrigin, TreeNode}
 
+import scala.collection.mutable.ArrayBuffer
+
 
 abstract class LogicalPlan extends QueryPlan[LogicalPlan] with Logging {
 
@@ -99,6 +101,16 @@ abstract class LogicalPlan extends QueryPlan[LogicalPlan] with Logging {
    */
   lazy val resolved: Boolean = expressions.forall(_.resolved) && childrenResolved
 
+  lazy val uniqueKeyForCache: String = {
+    val cleanPlan = EliminateSubQueries(this)
+    val ret = new ArrayBuffer[String]
+    ret.append(cleanPlan.getClass.toGenericString)
+    ret.append(cleanPlan.children.size.toString)
+    ret.append(cleanPlan.cleanArgs.mkString(","))
+    cleanPlan.children.map{ child => ret.append(child.uniqueKeyForCache)}
+    ret.mkString("##")
+  }
+
   override protected def statePrefix = if (!resolved) "'" else super.statePrefix
 
   /**
@@ -120,16 +132,7 @@ abstract class LogicalPlan extends QueryPlan[LogicalPlan] with Logging {
    * can do better should override this function.
    */
   def sameResult(plan: LogicalPlan): Boolean = {
-    val cleanLeft = EliminateSubQueries(this)
-    val cleanRight = EliminateSubQueries(plan)
-
-    cleanLeft.getClass == cleanRight.getClass &&
-      cleanLeft.children.size == cleanRight.children.size && {
-      logDebug(
-        s"[${cleanRight.cleanArgs.mkString(", ")}] == [${cleanLeft.cleanArgs.mkString(", ")}]")
-      cleanRight.cleanArgs == cleanLeft.cleanArgs
-    } &&
-    (cleanLeft.children, cleanRight.children).zipped.forall(_ sameResult _)
+    this.uniqueKeyForCache == plan.uniqueKeyForCache
   }
 
   /** Args that have cleaned such that differences in expression id should not affect equality */
