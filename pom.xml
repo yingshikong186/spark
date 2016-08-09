@@ -26,7 +26,7 @@
   </parent>
   <groupId>org.apache.spark</groupId>
   <artifactId>spark-parent_2.11</artifactId>
-  <version>2.0.0</version>
+  <version>GIO-2.0.0</version>
   <packaging>pom</packaging>
   <name>Spark Project Parent POM</name>
   <url>http://spark.apache.org/</url>
@@ -37,12 +37,12 @@
       <distribution>repo</distribution>
     </license>
   </licenses>
-  <scm>
-    <connection>scm:git:git@github.com:apache/spark.git</connection>
-    <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/spark.git</developerConnection>
-    <url>scm:git:git@github.com:apache/spark.git</url>
-    <tag>HEAD</tag>
-  </scm>
+  <distributionManagement>
+    <repository>
+      <id>releases</id>
+      <url>http://54.223.132.19:8081/nexus/content/repositories/releases</url>
+    </repository>
+  </distributionManagement>
   <developers>
     <developer>
       <id>matei</id>
@@ -2486,7 +2486,7 @@
     <profile>
       <id>hadoop-2.4</id>
       <properties>
-        <hadoop.version>2.4.1</hadoop.version>
+        <hadoop.version>2.5.2</hadoop.version>
         <jets3t.version>0.9.3</jets3t.version>
       </properties>
     </profile>
