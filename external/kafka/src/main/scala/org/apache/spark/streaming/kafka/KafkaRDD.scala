@@ -193,8 +193,7 @@ class KafkaRDD[
       handleFetchErr(resp)
 
       kc.setConsumerOffsets(kc.config.props.getString("group.id"),
-        Map(TopicAndPartition(part.topic, part.partition) ->
-          (part.fromOffset + resp.messageSet(part.topic, part.partition).size)))
+        Map(TopicAndPartition(part.topic, part.partition) -> requestOffset))
 
       // kafka may return a batch that starts before the requested offset
       resp.messageSet(part.topic, part.partition)
@@ -215,8 +214,6 @@ class KafkaRDD[
       if (!iter.hasNext) {
         assert(requestOffset == part.untilOffset, errRanOutBeforeEnd(part))
         finished = true
-        kc.setConsumerOffsets(kc.config.props.getString("group.id"),
-          Map(TopicAndPartition(part.topic, part.partition) -> requestOffset))
 
         null.asInstanceOf[R]
       } else {
