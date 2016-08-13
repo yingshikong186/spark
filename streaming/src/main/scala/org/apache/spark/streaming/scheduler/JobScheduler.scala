@@ -17,13 +17,11 @@
 
 package org.apache.spark.streaming.scheduler
 
-import java.util.concurrent.{ConcurrentHashMap, TimeUnit}
+import java.util.concurrent.{Callable, ConcurrentHashMap, TimeUnit}
 
 import scala.collection.JavaConverters._
 import scala.util.Failure
-
 import org.apache.commons.lang3.SerializationUtils
-
 import org.apache.spark.internal.Logging
 import org.apache.spark.rdd.{PairRDDFunctions, RDD}
 import org.apache.spark.streaming._
@@ -62,6 +60,8 @@ class JobScheduler(val ssc: StreamingContext) extends Logging {
   private var executorAllocationManager: Option[ExecutorAllocationManager] = None
 
   private var eventLoop: EventLoop[JobSchedulerEvent] = null
+
+  private val blockJobSubmit = ssc.conf.getBoolean("spark.streaming.blockJobSubmit", true)
 
   def start(): Unit = synchronized {
     if (eventLoop != null) return // scheduler has already been started
@@ -141,7 +141,13 @@ class JobScheduler(val ssc: StreamingContext) extends Logging {
     } else {
       listenerBus.post(StreamingListenerBatchSubmitted(jobSet.toBatchInfo))
       jobSets.put(jobSet.time, jobSet)
-      jobSet.jobs.foreach(job => jobExecutor.execute(new JobHandler(job)))
+      // make the job blocked
+      jobSet.jobs.foreach{job =>
+        val res = jobExecutor.submit(new JobHandler(job))
+        if (blockJobSubmit) {
+          res.get()
+        }
+      }
       logInfo("Added jobs for time " + jobSet.time)
     }
   }
@@ -212,10 +218,10 @@ class JobScheduler(val ssc: StreamingContext) extends Logging {
     ssc.waiter.notifyError(e)
   }
 
-  private class JobHandler(job: Job) extends Runnable with Logging {
+  private class JobHandler(job: Job) extends Callable[Boolean] with Logging {
     import JobScheduler._
 
-    def run() {
+    override def call(): Boolean = {
       val oldProps = ssc.sparkContext.getLocalProperties
       try {
         ssc.sparkContext.setLocalProperties(SerializationUtils.clone(ssc.savedProperties.get()))
@@ -254,7 +260,9 @@ class JobScheduler(val ssc: StreamingContext) extends Logging {
       } finally {
         ssc.sparkContext.setLocalProperties(oldProps)
       }
+      true
     }
+
   }
 }
 
