@@ -147,8 +147,7 @@ case class InsertIntoHiveTable(
     val hadoopConf = sessionState.newHadoopConf()
     val tmpLocation = getExternalTmpPath(tableLocation, hadoopConf)
     val fileSinkConf = new FileSinkDesc(tmpLocation.toString, tableDesc, false)
-    val isCompressed =
-      sessionState.conf.getConfString("hive.exec.compress.output", "false").toBoolean
+    val isCompressed = hadoopConf.getBoolean("hive.exec.compress.output", true)
 
     if (isCompressed) {
       // Please note that isCompressed, "mapred.output.compress", "mapred.output.compression.codec",
@@ -182,7 +181,7 @@ case class InsertIntoHiveTable(
     // Validate partition spec if there exist any dynamic partitions
     if (numDynamicPartitions > 0) {
       // Report error if dynamic partitioning is not enabled
-      if (!sessionState.conf.getConfString("hive.exec.dynamic.partition", "true").toBoolean) {
+      if (!hadoopConf.getBoolean("hive.exec.dynamic.partition", true)) {
         throw new SparkException(ErrorMsg.DYNAMIC_PARTITION_DISABLED.getMsg)
       }
 

@@ -2487,7 +2487,7 @@
       <id>hadoop-2.4</id>
       <properties>
         <hadoop.version>2.5.2</hadoop.version>
-        <jets3t.version>0.9.3</jets3t.version>
+        <jets3t.version>0.9.4</jets3t.version>
       </properties>
     </profile>
 
