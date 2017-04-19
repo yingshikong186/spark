@@ -127,19 +127,10 @@ if [ ! $(command -v "$MVN") ] ; then
     exit -1;
 fi
 
-VERSION=$("$MVN" help:evaluate -Dexpression=project.version $@ 2>/dev/null | grep -v "INFO" | tail -n 1)
-SCALA_VERSION=$("$MVN" help:evaluate -Dexpression=scala.binary.version $@ 2>/dev/null\
-    | grep -v "INFO"\
-    | tail -n 1)
-SPARK_HADOOP_VERSION=$("$MVN" help:evaluate -Dexpression=hadoop.version $@ 2>/dev/null\
-    | grep -v "INFO"\
-    | tail -n 1)
-SPARK_HIVE=$("$MVN" help:evaluate -Dexpression=project.activeProfiles -pl sql/hive $@ 2>/dev/null\
-    | grep -v "INFO"\
-    | fgrep --count "<id>hive</id>";\
-    # Reset exit status to 0, otherwise the script stops here if the last grep finds nothing\
-    # because we use "set -o pipefail"
-    echo -n)
+VERSION=GIO-1.5.1.2
+SCALA_VERSION=2.10.4
+SPARK_HADOOP_VERSION=2.7.3
+SPARK_HIVE=1
 
 if [ "$NAME" == "none" ]; then
   NAME=$SPARK_HADOOP_VERSION
@@ -167,7 +158,7 @@ export MAVEN_OPTS="-Xmx2g -XX:MaxPermSize=512M -XX:ReservedCodeCacheSize=512m"
 # Store the command as an array because $MVN variable might have spaces in it.
 # Normal quoting tricks don't work.
 # See: http://mywiki.wooledge.org/BashFAQ/050
-BUILD_COMMAND=("$MVN" clean package -DskipTests $@)
+BUILD_COMMAND=("$MVN" package -DskipTests $@)
 
 # Actually build the jar
 echo -e "\nBuilding with..."
