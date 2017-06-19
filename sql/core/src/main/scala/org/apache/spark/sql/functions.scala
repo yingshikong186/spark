@@ -28,6 +28,7 @@ import org.apache.spark.sql.catalyst.analysis.{Star, UnresolvedFunction}
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.catalyst.expressions.aggregate._
+import org.apache.spark.sql.catalyst.expressions.aggregate.gio._
 import org.apache.spark.sql.catalyst.plans.logical.BroadcastHint
 import org.apache.spark.sql.execution.SparkSqlParser
 import org.apache.spark.sql.expressions.UserDefinedFunction
@@ -3219,5 +3220,25 @@ object functions {
   @scala.annotation.varargs
   def callUDF(udfName: String, cols: Column*): Column = withExpr {
     UnresolvedFunction(udfName, cols.map(_.expr), isDistinct = false)
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////
+  // GIO functions
+  //////////////////////////////////////////////////////////////////////////////////////////////
+
+  def collect_bucket_bitmap(bucket: Column, uid: Column): Column = withAggregateFunction {
+    CollectBucketBitmap(bucket.expr, uid.expr)
+  }
+
+  def collect_cbitmap(bucket: Column, uid: Column, count: Column): Column = withAggregateFunction {
+    CollectCBitmap(bucket.expr, uid.expr, count.expr)
+  }
+
+  def merge_bucket_bitmap(bitmap: Column): Column = withAggregateFunction {
+    MergeBucketBitmap(bitmap.expr)
+  }
+
+  def merge_cbitmap(bitmap: Column): Column = withAggregateFunction {
+    MergeCBitmap(bitmap.expr)
   }
 }

@@ -25,6 +25,7 @@ import org.apache.spark.sql.AnalysisException
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.catalyst.expressions.aggregate._
+import org.apache.spark.sql.catalyst.expressions.aggregate.gio._
 import org.apache.spark.sql.catalyst.expressions.xml._
 import org.apache.spark.sql.catalyst.util.StringKeyHashMap
 import org.apache.spark.sql.types._
@@ -426,7 +427,13 @@ object FunctionRegistry {
     castAlias("date", DateType),
     castAlias("timestamp", TimestampType),
     castAlias("binary", BinaryType),
-    castAlias("string", StringType)
+    castAlias("string", StringType),
+
+    // gio functions
+    expression[CollectBucketBitmap]("collect_bucket_bitmap"),
+    expression[CollectCBitmap]("collect_cbitmap"),
+    expression[MergeBucketBitmap]("merge_bucket_bitmap"),
+    expression[MergeCBitmap]("merge_cbitmap")
   )
 
   val builtin: SimpleFunctionRegistry = {

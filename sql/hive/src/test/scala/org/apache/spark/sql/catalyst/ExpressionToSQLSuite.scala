@@ -283,4 +283,23 @@ class ExpressionToSQLSuite extends SQLBuilderTest with SQLTestUtils {
     checkSqlGeneration("SELECT 1 + (SELECT 2)")
     checkSqlGeneration("SELECT 1 + (SELECT 2 + (SELECT 3 as a))")
   }
+
+  test("gio functions") {
+    checkSqlGeneration("SELECT collect_bucket_bitmap(key, 123) FROM t1 GROUP BY key")
+    checkSqlGeneration("SELECT collect_cbitmap(key, 123, 100) FROM t1 GROUP BY key")
+    checkSqlGeneration(
+      s"""
+         |SELECT merge_bucket_bitmap(t.sbm) FROM (
+         |  SELECT key, collect_bucket_bitmap(key, 123) AS sbm FROM t1 GROUP BY key
+         |) t
+         |GROUP BY pmod(key, 2)
+       """.stripMargin)
+    checkSqlGeneration(
+      s"""
+         |SELECT merge_cbitmap(t.cbm) FROM (
+         |  SELECT key, collect_cbitmap(key, 123, 100) AS cbm FROM t1 GROUP BY key
+         |) t
+         |GROUP BY pmod(key, 2)
+       """.stripMargin)
+  }
 }
