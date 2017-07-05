@@ -2439,6 +2439,13 @@
     </plugins>
   </build>
 
+  <distributionManagement>
+    <repository>
+      <id>releases</id>
+      <url>http://54.223.132.19:8081/nexus/content/repositories/releases</url>
+    </repository>
+  </distributionManagement>
+
   <profiles>
 
     <!--
