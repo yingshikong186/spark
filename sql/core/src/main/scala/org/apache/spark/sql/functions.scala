@@ -3234,11 +3234,21 @@ object functions {
     CollectCBitmap(bucket.expr, uid.expr, count.expr)
   }
 
+  def collect_sbitmap(bucket: Column, uid: Column, session: Column): Column = {
+    withAggregateFunction {
+      CollectSBitmap(bucket.expr, uid.expr, session.expr)
+    }
+  }
+
   def merge_bucket_bitmap(bitmap: Column): Column = withAggregateFunction {
     MergeBucketBitmap(bitmap.expr)
   }
 
   def merge_cbitmap(bitmap: Column): Column = withAggregateFunction {
     MergeCBitmap(bitmap.expr)
+  }
+
+  def merge_sbitmap(bitmap: Column): Column = withAggregateFunction {
+    MergeSBitmap(bitmap.expr)
   }
 }
