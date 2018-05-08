@@ -43,7 +43,7 @@ case class CollectSBitmap(
   extends TypedImperativeAggregate[SBitMap] {
 
   def this(bucket: Expression, uid: Expression, session: Expression) = {
-    this(bucket, uid, session)
+    this(bucket, uid, session, 0, 0)
   }
 
   override def createAggregationBuffer(): SBitMap = new SBitMap()
