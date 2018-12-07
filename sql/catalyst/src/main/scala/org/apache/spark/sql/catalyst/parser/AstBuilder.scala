@@ -967,7 +967,7 @@ class AstBuilder extends SqlBaseBaseVisitor[AnyRef] with Logging {
       case SqlBaseParser.MINUS =>
         Subtract(left, right)
       case SqlBaseParser.CONCAT_PIPE =>
-        Concat(left :: right :: Nil)
+        ConcatWs(Literal.create("", StringType) :: left :: right :: Nil)
       case SqlBaseParser.AMPERSAND =>
         BitwiseAnd(left, right)
       case SqlBaseParser.HAT =>

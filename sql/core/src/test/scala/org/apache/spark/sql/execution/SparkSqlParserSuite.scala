@@ -21,7 +21,7 @@ import org.apache.spark.sql.SaveMode
 import org.apache.spark.sql.catalyst.{FunctionIdentifier, TableIdentifier}
 import org.apache.spark.sql.catalyst.analysis.{UnresolvedAlias, UnresolvedAttribute, UnresolvedRelation}
 import org.apache.spark.sql.catalyst.catalog.{BucketSpec, CatalogStorageFormat, CatalogTable, CatalogTableType}
-import org.apache.spark.sql.catalyst.expressions.Concat
+import org.apache.spark.sql.catalyst.expressions.{ConcatWs, Literal}
 import org.apache.spark.sql.catalyst.parser.ParseException
 import org.apache.spark.sql.catalyst.plans.PlanTest
 import org.apache.spark.sql.catalyst.plans.logical.{LogicalPlan, Project}
@@ -255,8 +255,9 @@ class SparkSqlParserSuite extends PlanTest {
 
 
   test("pipeline concatenation") {
-    val concat = Concat(
-      Concat(UnresolvedAttribute("a") :: UnresolvedAttribute("b") :: Nil) ::
+    val concat = ConcatWs(Literal.create("", StringType) ::
+      ConcatWs(Literal.create("", StringType) ::
+        UnresolvedAttribute("a") :: UnresolvedAttribute("b") :: Nil) ::
       UnresolvedAttribute("c") ::
       Nil
     )
