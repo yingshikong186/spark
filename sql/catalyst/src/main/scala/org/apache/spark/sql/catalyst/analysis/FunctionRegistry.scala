@@ -435,7 +435,14 @@ object FunctionRegistry {
     expression[CollectSBitmap]("collect_sbitmap"),
     expression[MergeBucketBitmap]("merge_bucket_bitmap"),
     expression[MergeCBitmap]("merge_cbitmap"),
-    expression[MergeSBitmap]("merge_sbitmap")
+    expression[MergeSBitmap]("merge_sbitmap"),
+    // gio functions v2
+    expression[BucketBitmapMerge]("bucket_bitmap_merge"),
+    expression[CBitmapMerge]("cbitmap_merge"),
+    expression[SBitmapMerge]("sbitmap_merge"),
+    expression[BucketBitmapMerge2]("bucket_bitmap_merge2"),
+    expression[CBitmapMerge2]("cbitmap_merge2"),
+    expression[SBitmapMerge2]("sbitmap_merge2")
   )
 
   val builtin: SimpleFunctionRegistry = {
