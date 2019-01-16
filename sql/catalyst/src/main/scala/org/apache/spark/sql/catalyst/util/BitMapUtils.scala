@@ -33,8 +33,8 @@ object BitMapUtils {
     }
     val newContainer = new util.HashMap[lang.Short, RoaringBitmap]()
     bitmap.getContainer.asScala.foreach { kv =>
-      // rate is 7:9
-      val newKey = ((rid & 0x007F) << 9) | (kv._1 & 0x01FF)
+      // rate is 8:8
+      val newKey = ((rid & 0x00FF) << 8) | (kv._1 & 0x00FF)
       newContainer.put(newKey.toShort, kv._2)
     }
     new BucketBitMap(newContainer, false)
