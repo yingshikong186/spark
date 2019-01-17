@@ -27,7 +27,7 @@ import org.apache.spark.sql.types.{AbstractDataType, BinaryType, DataType, Numer
 
 
 /**
- * Desc: Merge ESBitmap([[SBitMap]]) into one ESBitmap([[SBitMap]])
+ * Desc: Merge ESBitmap([[SBitMap]]) into one ESBitmap([[SBitMap]]), Merge EID !!!
  */
 @ExpressionDescription(
   usage =
@@ -55,7 +55,7 @@ case class SBitmapMerge2(
   override def update(buffer: SBitMap, input: InternalRow): Unit = {
     val _sbitmap = new SBitMap(sbitmap.eval(input).asInstanceOf[Array[Byte]])
     val _rid = rid.eval(input).asInstanceOf[Number].shortValue()
-    buffer.or(BitMapUtils.mergeRuleId(_sbitmap, _rid))
+    buffer.or(BitMapUtils.mergeRuleIdIntoSessionId(_sbitmap, _rid))
   }
 
   override def merge(buffer: SBitMap, input: SBitMap): Unit = {

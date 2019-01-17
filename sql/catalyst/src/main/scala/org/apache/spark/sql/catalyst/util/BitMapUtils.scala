@@ -33,11 +33,19 @@ object BitMapUtils {
     }
     val newContainer = new util.HashMap[lang.Short, RoaringBitmap]()
     bitmap.getContainer.asScala.foreach { kv =>
-      // rate is 8:8
-      val newKey = ((rid & 0x00FF) << 8) | (kv._1 & 0x00FF)
+      val newKey = mergeNewKey(rid, kv._1)
       newContainer.put(newKey.toShort, kv._2)
     }
     new BucketBitMap(newContainer, false)
+  }
+
+  /**
+    * Generate newKey for SID/EID...
+    */
+  private def mergeNewKey(rid: Short, id: Short): Short = {
+    // rate is 8:8
+    val key = ((rid & 0x00FF) << 8) | (id & 0x00FF)
+    key.shortValue()
   }
 
   /**
@@ -52,13 +60,25 @@ object BitMapUtils {
   }
 
   /**
-    * merge rid (ruleId index) into SBitmap
+    * merge rid (ruleId index) into SBitmap, merge into bucket id
     */
-  def mergeRuleId(sbitmap: SBitMap, rid: Short): SBitMap = {
+  def mergeRuleIdIntoBucketId(sbitmap: SBitMap, rid: Short): SBitMap = {
     val sbm = sbitmap.getContainer
     sbm.keySet().asScala.foreach { pos =>
       sbm.put(pos, mergeRuleId(sbm.get(pos), rid))
     }
     sbitmap
+  }
+
+  /**
+    * merge rid (ruleId index) into SBitmap, merge into session id
+    */
+  def mergeRuleIdIntoSessionId(sbitmap: SBitMap, rid: Short): SBitMap = {
+    val newContainer = new util.HashMap[lang.Integer, BucketBitMap]()
+    sbitmap.getContainer.asScala.foreach { kv =>
+      val newKey = mergeNewKey(rid, kv._1.shortValue())
+      newContainer.put(newKey.intValue(), kv._2)
+    }
+    new SBitMap(newContainer, false)
   }
 }
